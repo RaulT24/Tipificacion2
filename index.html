@@ -20,7 +20,7 @@
 
         // Inicializar Firebase
         const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore(app);
+        const db = firebase.firestore();
 
         // Función para enviar el formulario
         function saveForm(event) {
@@ -128,3 +128,4 @@
     </form>
 </body>
 </html>
+
