@@ -58,6 +58,7 @@
             .then(() => {
                 alert('Formulario enviado exitosamente.');
                 document.getElementById('form').reset();
+                document.getElementById('details-container').innerHTML = ''; // Limpiar el contenedor de detalles
             })
             .catch((error) => {
                 alert('Error: ' + error.message);
@@ -134,3 +135,4 @@
     </div>
 </body>
 </html>
+
