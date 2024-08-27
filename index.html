@@ -3,48 +3,51 @@
 <head>
     <title>Formulario de Llamadas</title>
     <!-- Firebase SDKs desde CDN -->
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js"></script>
     
     <script>
-        // Configuración de Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBQqbaFLm2DRldeIU3v3RWkSX0_1vsMrWs",
-            authDomain: "tipificacion-de-llamadas.firebaseapp.com",
-            projectId: "tipificacion-de-llamadas",
-            storageBucket: "tipificacion-de-llamadas.appspot.com",
-            messagingSenderId: "738039891529",
-            appId: "1:738039891529:web:f3c6aabb640d49cbd2a198",
-            measurementId: "G-TBHSZLK7C2"
-        };
+        // Espera a que el DOM esté completamente cargado antes de inicializar Firebase
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configuración de Firebase
+            const firebaseConfig = {
+                apiKey: "AIzaSyBQqbaFLm2DRldeIU3v3RWkSX0_1vsMrWs",
+                authDomain: "tipificacion-de-llamadas.firebaseapp.com",
+                projectId: "tipificacion-de-llamadas",
+                storageBucket: "tipificacion-de-llamadas.appspot.com",
+                messagingSenderId: "738039891529",
+                appId: "1:738039891529:web:f3c6aabb640d49cbd2a198",
+                measurementId: "G-TBHSZLK7C2"
+            };
 
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+            // Inicializar Firebase
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
 
-        // Guardar datos del formulario
-        function saveForm() {
-            const agentName = document.getElementById('agent-name').value;
-            const callType = document.getElementById('call-type').value;
-            const details = document.getElementById('details').value;
-            const observation = document.getElementById('observation').value;
+            // Guardar datos del formulario
+            window.saveForm = function() {
+                const agentName = document.getElementById('agent-name').value;
+                const callType = document.getElementById('call-type').value;
+                const details = document.getElementById('details').value;
+                const observation = document.getElementById('observation').value;
 
-            db.collection("calls").add({
-                agentName: agentName,
-                callType: callType,
-                details: details,
-                observation: observation,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                alert('Formulario enviado exitosamente.');
-                document.getElementById('form').reset();
-            })
-            .catch((error) => {
-                alert('Error: ' + error.message);
-            });
-        }
+                db.collection("calls").add({
+                    agentName: agentName,
+                    callType: callType,
+                    details: details,
+                    observation: observation,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    alert('Formulario enviado exitosamente.');
+                    document.getElementById('form').reset();
+                })
+                .catch((error) => {
+                    alert('Error: ' + error.message);
+                });
+            }
+        });
     </script>
 </head>
 <body>
@@ -122,3 +125,4 @@
     </script>
 </body>
 </html>
+
