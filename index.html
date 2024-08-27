@@ -2,10 +2,12 @@
 <html>
 <head>
     <title>Formulario de Llamadas</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js"></script>
-    <script>
+    <script type="module">
+        // Importar funciones necesarias de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
         // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBQqbaFLm2DRldeIU3v3RWkSX0_1vsMrWs",
@@ -18,20 +20,17 @@
         };
 
         // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-
-        // Inicializar Firebase Authentication y Firestore
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
         // Función para iniciar sesión
         function signIn() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            auth.signInWithEmailAndPassword(email, password)
+            signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
-                    // Guardar el nombre de usuario
                     const user = userCredential.user;
                     document.getElementById('agent-name').value = user.email.split('@')[0]; // Extraer nombre del email
                     document.getElementById('login-form').style.display = 'none'; // Ocultar formulario de inicio de sesión
@@ -49,12 +48,12 @@
             const details = document.getElementById('details').value;
             const observation = document.getElementById('observation').value;
 
-            db.collection('calls').add({
+            addDoc(collection(db, 'calls'), {
                 name: name,
                 callType: callType,
                 details: details,
                 observation: observation,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                timestamp: serverTimestamp()
             })
             .then(() => {
                 alert('Formulario enviado exitosamente.');
@@ -64,11 +63,45 @@
                 alert('Error: ' + error.message);
             });
         }
+        
+        // Mostrar detalles adicionales según el tipo de llamada
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('call-type').addEventListener('change', function() {
+                const callType = this.value;
+                const detailsContainer = document.getElementById('details-container');
+                detailsContainer.innerHTML = ''; // Limpiar el contenido previo
+
+                if (callType === 'Asignación cita') {
+                    const options = [
+                        'Asignación cita Ginecología (incluye procedimientos)',
+                        'Asignación Cita Pami',
+                        'Asignación Cita Pediatría',
+                        'Asignación Cita Cardiología (incluye procedimientos)',
+                        'Asignación Cita Oncología (incluye procedimientos)'
+                    ];
+                    const select = document.createElement('select');
+                    select.id = 'details';
+                    select.required = true;
+                    options.forEach(option => {
+                        const opt = document.createElement('option');
+                        opt.value = option;
+                        opt.textContent = option;
+                        select.appendChild(opt);
+                    });
+                    detailsContainer.appendChild(select);
+                } else {
+                    const input = document.createElement('input');
+                    input.id = 'details';
+                    input.type = 'text';
+                    detailsContainer.appendChild(input);
+                }
+            });
+        });
     </script>
 </head>
 <body>
     <div id="login-form">
-        <h2>Iniciar Sesión</h2>
+        <h2>Iniciar sesión</h2>
         <form onsubmit="event.preventDefault(); signIn();">
             <label for="email">Correo Electrónico:</label>
             <input type="email" id="email" required><br>
@@ -84,7 +117,7 @@
             <input type="text" id="agent-name" readonly><br>
             <label for="call-type">Tipo de Llamada:</label>
             <select id="call-type" required>
-                <option value="Asignacion cita">Asignación cita</option>
+                <option value="Asignación cita">Asignación cita</option>
                 <option value="Cancelación o reprogramación de Cita">Cancelación o reprogramación de Cita</option>
                 <option value="Información Cita">Información Cita</option>
                 <option value="Información sedes Atención">Información sedes Atención</option>
@@ -98,38 +131,5 @@
             <button type="submit">Guardar</button>
         </form>
     </div>
-
-    <script>
-        document.getElementById('call-type').addEventListener('change', function() {
-            const callType = this.value;
-            const detailsContainer = document.getElementById('details-container');
-            detailsContainer.innerHTML = ''; // Limpiar el contenido previo
-
-            if (callType === 'Asignacion cita') {
-                const options = [
-                    'Asignacion cita Ginecologia (incluye procedimientos)',
-                    'Asignacion Cita Pami',
-                    'Asignacion Cita Pediatria',
-                    'Asignacion Cita Cardiología (incluye procedimientos)',
-                    'Asignacion Cita Oncología (incluye procedimientos)'
-                ];
-                const select = document.createElement('select');
-                select.id = 'details';
-                select.required = true;
-                options.forEach(option => {
-                    const opt = document.createElement('option');
-                    opt.value = option;
-                    opt.textContent = option;
-                    select.appendChild(opt);
-                });
-                detailsContainer.appendChild(select);
-            } else {
-                const input = document.createElement('input');
-                input.id = 'details';
-                input.type = 'text';
-                detailsContainer.appendChild(input);
-            }
-        });
-    </script>
 </body>
 </html>
