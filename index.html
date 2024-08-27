@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Prueba de Conexión a Firebase</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Llamadas</title>
     <script type="module">
         // Importar funciones necesarias de Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
         // Configuración de Firebase
         const firebaseConfig = {
@@ -20,29 +23,112 @@
 
         // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Función para probar la conexión
-        async function testConnection() {
-            try {
-                const querySnapshot = await getDocs(collection(db, "calls"));
-                console.log("Datos obtenidos de Firestore:");
-                querySnapshot.forEach((doc) => {
-                    console.log(`${doc.id} => ${doc.data()}`);
+        // Función para iniciar sesión
+        function signIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    document.getElementById('agent-name').value = user.email.split('@')[0]; // Extraer nombre del email
+                    document.getElementById('login-form').style.display = 'none'; // Ocultar formulario de inicio de sesión
+                    document.getElementById('form').style.display = 'block'; // Mostrar formulario de llamadas
+                })
+                .catch((error) => {
+                    alert('Error: ' + error.message);
                 });
-                alert("Conexión a Firebase exitosa. Revisa la consola para ver los datos.");
+        }
+
+        // Función para enviar el formulario
+        async function sendForm() {
+            const name = document.getElementById('agent-name').value;
+            const callType = document.getElementById('call-type').value;
+            const details = document.getElementById('details') ? document.getElementById('details').value : '';
+            const observation = document.getElementById('observation').value;
+
+            try {
+                await addDoc(collection(db, 'calls'), {
+                    name: name,
+                    callType: callType,
+                    details: details,
+                    observation: observation,
+                    timestamp: serverTimestamp()
+                });
+                alert('Formulario enviado exitosamente.');
+                document.getElementById('form').reset();
             } catch (error) {
-                alert("Error al conectar con Firebase: " + error.message);
-                console.error("Error al conectar con Firestore: ", error);
+                alert('Error al enviar el formulario: ' + error.message);
             }
         }
 
-        // Llamar a la función de prueba cuando la página se carga
-        document.addEventListener('DOMContentLoaded', testConnection);
+        // Mostrar campos adicionales según el tipo de llamada
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('call-type').addEventListener('change', function () {
+                const callType = this.value;
+                const detailsContainer = document.getElementById('details-container');
+                detailsContainer.innerHTML = ''; // Limpiar el contenido anterior
+
+                if (callType === 'Asignacion cita') {
+                    const options = [
+                        'Asignacion cita Ginecologia (incluye procedimientos)',
+                        'Asignacion Cita Pami',
+                        'Asignacion Cita Pediatria',
+                        'Asignacion Cita Cardiología (incluye procedimientos)',
+                        'Asignacion Cita Oncología (incluye procedimientos)'
+                    ];
+                    const select = document.createElement('select');
+                    select.id = 'details';
+                    select.required = true;
+                    options.forEach(option => {
+                        const opt = document.createElement('option');
+                        opt.value = option;
+                        opt.textContent = option;
+                        select.appendChild(opt);
+                    });
+                    detailsContainer.appendChild(select);
+                } else {
+                    const input = document.createElement('input');
+                    input.id = 'details';
+                    input.type = 'text';
+                    detailsContainer.appendChild(input);
+                }
+            });
+        });
     </script>
 </head>
 <body>
-    <h1>Prueba de Conexión a Firebase</h1>
-    <p>Revisa la consola del navegador para ver los datos obtenidos de Firestore.</p>
+    <div id="login-form">
+        <h2>Iniciar sesión</h2>
+        <form onsubmit="event.preventDefault(); signIn();">
+            <label for="email">Correo Electrónico:</label>
+            <input type="email" id="email" required><br>
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" required><br>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+    </div>
+
+    <div id="form" style="display: none;">
+        <h2>Formulario de Llamadas</h2>
+        <form onsubmit="event.preventDefault(); sendForm();">
+            <input type="text" id="agent-name" readonly><br>
+            <label for="call-type">Tipo de Llamada:</label>
+            <select id="call-type" required>
+                <option value="Asignacion cita">Asignacion cita</option>
+                <option value="Cancelación o reprogramación de Cita">Cancelación o reprogramación de Cita</option>
+                <option value="Información Cita">Información Cita</option>
+                <option value="Información sedes Atención">Información sedes Atención</option>
+                <option value="Otro tipo de información">Otro tipo de información</option>
+            </select><br>
+            <div id="details-container"></div><br>
+            <label for="observation">Observación:</label>
+            <textarea id="observation" rows="5" cols="50" maxlength="1000" required></textarea><br>
+            <button type="submit">Guardar</button>
+        </form>
+    </div>
 </body>
 </html>
