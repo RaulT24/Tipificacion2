@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Formulario de Llamadas</title>
+    <title>Prueba de Conexión a Firebase</title>
     <script type="module">
         // Importar funciones necesarias de Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
         // Configuración de Firebase
         const firebaseConfig = {
@@ -22,117 +22,27 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Lista de nombres de agentes
-        const agents = [
-            "Andrea Diaz",
-            "Angelica de la Rosa",
-            "Carmen Herrera",
-            "Daniela Pernett",
-            "Alexandra Padilla",
-            "Jaider Romero",
-            "Katy Lopez",
-            "Laura Amell",
-            "Maira Carpintero",
-            "Saih Alvarez",
-            "Saray Aparicio",
-            "Sneider Garcia",
-            "Alexandra Cepeda",
-            "Ana Maria Insignares",
-            "Yuli Lopez"
-        ];
-
-        // Función para enviar el formulario
-        function submitForm() {
-            const name = document.getElementById('agent-name').value;
-            const callType = document.getElementById('call-type').value;
-            const details = document.getElementById('details').value;
-            const observation = document.getElementById('observation').value;
-
-            addDoc(collection(db, 'calls'), {
-                name: name,
-                callType: callType,
-                details: details,
-                observation: observation,
-                timestamp: serverTimestamp()
-            })
-            .then(() => {
-                alert('Formulario enviado exitosamente.');
-                document.getElementById('form').reset();
-                document.getElementById('details-container').innerHTML = ''; // Limpiar el contenedor de detalles
-            })
-            .catch((error) => {
-                alert('Error: ' + error.message);
-            });
+        // Función para probar la conexión
+        async function testConnection() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "calls"));
+                console.log("Datos obtenidos de Firestore:");
+                querySnapshot.forEach((doc) => {
+                    console.log(`${doc.id} => ${doc.data()}`);
+                });
+                alert("Conexión a Firebase exitosa. Revisa la consola para ver los datos.");
+            } catch (error) {
+                alert("Error al conectar con Firebase: " + error.message);
+                console.error("Error al conectar con Firestore: ", error);
+            }
         }
 
-        // Mostrar detalles adicionales según el tipo de llamada
-        document.addEventListener('DOMContentLoaded', () => {
-            // Cargar la lista de nombres en el desplegable
-            const agentSelect = document.getElementById('agent-name');
-            agents.forEach(agent => {
-                const option = document.createElement('option');
-                option.value = agent;
-                option.textContent = agent;
-                agentSelect.appendChild(option);
-            });
-
-            document.getElementById('call-type').addEventListener('change', function() {
-                const callType = this.value;
-                const detailsContainer = document.getElementById('details-container');
-                detailsContainer.innerHTML = ''; // Limpiar el contenido previo
-
-                if (callType === 'Asignación cita') {
-                    const options = [
-                        'Asignación cita Ginecología (incluye procedimientos)',
-                        'Asignación Cita Pami',
-                        'Asignación Cita Pediatría',
-                        'Asignación Cita Cardiología (incluye procedimientos)',
-                        'Asignación Cita Oncología (incluye procedimientos)'
-                    ];
-                    const select = document.createElement('select');
-                    select.id = 'details';
-                    select.required = true;
-                    options.forEach(option => {
-                        const opt = document.createElement('option');
-                        opt.value = option;
-                        opt.textContent = option;
-                        select.appendChild(opt);
-                    });
-                    detailsContainer.appendChild(select);
-                } else {
-                    const input = document.createElement('input');
-                    input.id = 'details';
-                    input.type = 'text';
-                    detailsContainer.appendChild(input);
-                }
-            });
-        });
+        // Llamar a la función de prueba cuando la página se carga
+        document.addEventListener('DOMContentLoaded', testConnection);
     </script>
 </head>
 <body>
-    <div id="form">
-        <h2>Formulario de Llamadas</h2>
-        <form onsubmit="event.preventDefault(); submitForm();">
-            <label for="agent-name">Nombre del Agente:</label>
-            <select id="agent-name" required>
-                <!-- La lista de nombres se cargará aquí dinámicamente -->
-            </select><br>
-            <label for="call-type">Tipo de Llamada:</label>
-            <select id="call-type" required>
-                <option value="Asignación cita">Asignación cita</option>
-                <option value="Cancelación o reprogramación de Cita">Cancelación o reprogramación de Cita</option>
-                <option value="Información Cita">Información Cita</option>
-                <option value="Información sedes Atención">Información sedes Atención</option>
-                <option value="Otro tipo de información">Otro tipo de información</option>
-            </select><br>
-            <div id="details-container">
-                <!-- Aquí se mostrarán detalles adicionales según el tipo de llamada -->
-            </div>
-            <label for="observation">Observación:</label>
-            <textarea id="observation" rows="5" cols="50" maxlength="1000" required></textarea><br>
-            <button type="submit">Guardar</button>
-        </form>
-    </div>
+    <h1>Prueba de Conexión a Firebase</h1>
+    <p>Revisa la consola del navegador para ver los datos obtenidos de Firestore.</p>
 </body>
 </html>
-
