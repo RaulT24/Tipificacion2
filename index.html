@@ -1,50 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulario de Llamadas</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js"></script>
-</head>
-<body>
-    <h2>Formulario de Llamadas</h2>
-    <form id="call-form" onsubmit="event.preventDefault(); saveForm();">
-        <label for="agent-name">Nombre del Agente:</label>
-        <select id="agent-name" required>
-            <option value="">Seleccionar Agente</option>
-            <option value="Andrea Diaz">Andrea Diaz</option>
-            <option value="Angelica de la Rosa">Angelica de la Rosa</option>
-            <option value="Carmen Herrera">Carmen Herrera</option>
-            <option value="Daniela Pernett">Daniela Pernett</option>
-            <option value="Alexandra Padilla">Alexandra Padilla</option>
-            <option value="Jaider Romero">Jaider Romero</option>
-            <option value="Katy Lopez">Katy Lopez</option>
-            <option value="Laura Amell">Laura Amell</option>
-            <option value="Maira Carpintero">Maira Carpintero</option>
-            <option value="Saih Alvarez">Saih Alvarez</option>
-            <option value="Saray Aparicio">Saray Aparicio</option>
-            <option value="Sneider Garcia">Sneider Garcia</option>
-            <option value="Alexandra Cepeda">Alexandra Cepeda</option>
-            <option value="Ana Maria Insignares">Ana Maria Insignares</option>
-            <option value="Yuli Lopez">Yuli Lopez</option>
-        </select><br><br>
-
-        <label for="call-type">Tipo de Llamada:</label>
-        <select id="call-type" required onchange="handleCallTypeChange()">
-            <option value="Asignacion cita">Asignación cita</option>
-            <option value="Cancelación o reprogramación de Cita">Cancelación o reprogramación de Cita</option>
-            <option value="Información Cita">Información Cita</option>
-            <option value="Información sedes Atención">Información sedes Atención</option>
-            <option value="Otro tipo de información">Otro tipo de información</option>
-        </select><br><br>
-
-        <div id="details-container"></div><br>
-
-        <label for="observation">Observación:</label><br>
-        <textarea id="observation" rows="5" cols="50" maxlength="1000" required></textarea><br><br>
-
-        <button type="submit">Guardar</button>
-    </form>
-
     <script>
         // Configuración de Firebase
         const firebaseConfig = {
@@ -58,22 +19,46 @@
         };
 
         // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(app);
 
-        // Inicializar Firestore
-        const db = firebase.firestore();
+        // Función para enviar el formulario
+        function saveForm(event) {
+            event.preventDefault(); // Evitar el envío del formulario
 
-        // Manejar el cambio en el tipo de llamada
-        function handleCallTypeChange() {
+            const agentName = document.getElementById('agent-name').value;
+            const callType = document.getElementById('call-type').value;
+            const details = document.getElementById('details').value;
+            const observation = document.getElementById('observation').value;
+
+            db.collection('llamadas').add({
+                nombre: agentName,
+                tipoDeLlamada: callType,
+                detalles: details,
+                observación: observation,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                alert('Formulario enviado exitosamente.');
+                document.getElementById('call-form').reset(); // Limpiar el formulario
+            })
+            .catch((error) => {
+                console.error('Error al guardar datos: ', error);
+                alert('Error al enviar el formulario: ' + error.message);
+            });
+        }
+
+        // Función para mostrar los detalles adicionales en función del tipo de llamada
+        function updateDetails() {
             const callType = document.getElementById('call-type').value;
             const detailsContainer = document.getElementById('details-container');
-            detailsContainer.innerHTML = '';  // Limpiar el contenido anterior
+            detailsContainer.innerHTML = ''; // Limpiar el contenido anterior
 
             if (callType === 'Asignacion cita') {
                 const options = [
                     'Asignacion cita Ginecologia (incluye procedimientos)',
-                    'Asignación Cita Pami',
-                    'Asignación Cita Pediatría',
+                    'Asignacion Cita Pami',
+                    'Asignacion Cita Pediatria',
                     'Asignacion Cita Cardiología (incluye procedimientos)',
                     'Asignacion Cita Oncología (incluye procedimientos)'
                 ];
@@ -97,29 +82,49 @@
                 detailsContainer.appendChild(input);
             }
         }
-
-        // Guardar el formulario en Firestore
-        function saveForm() {
-            const agentName = document.getElementById('agent-name').value;
-            const callType = document.getElementById('call-type').value;
-            const details = document.getElementById('details') ? document.getElementById('details').value : '';
-            const observation = document.getElementById('observation').value;
-
-            db.collection('llamadas').add({
-                agentName: agentName,
-                callType: callType,
-                details: details,
-                observation: observation,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                alert('Formulario enviado exitosamente.');
-                document.getElementById('call-form').reset();  // Limpiar el formulario
-            })
-            .catch((error) => {
-                alert('Error: ' + error.message);
-            });
-        }
     </script>
+</head>
+<body>
+    <h2>Formulario de Llamadas</h2>
+    <form id="call-form" onsubmit="saveForm(event)">
+        <label for="agent-name">Nombre del Agente:</label>
+        <select id="agent-name" required>
+            <option value="" disabled selected>Seleccione el nombre del agente</option>
+            <option value="Andrea Diaz">Andrea Diaz</option>
+            <option value="Angelica de la Rosa">Angelica de la Rosa</option>
+            <option value="Carmen Herrera">Carmen Herrera</option>
+            <option value="Daniela Pernett">Daniela Pernett</option>
+            <option value="Alexandra Padilla">Alexandra Padilla</option>
+            <option value="Jaider Romero">Jaider Romero</option>
+            <option value="Katy Lopez">Katy Lopez</option>
+            <option value="Laura Amell">Laura Amell</option>
+            <option value="Maira Carpintero">Maira Carpintero</option>
+            <option value="Saih Alvarez">Saih Alvarez</option>
+            <option value="Saray Aparicio">Saray Aparicio</option>
+            <option value="Sneider Garcia">Sneider Garcia</option>
+            <option value="Alexandra Cepeda">Alexandra Cepeda</option>
+            <option value="Ana Maria Insignares">Ana Maria Insignares</option>
+            <option value="Yuli Lopez">Yuli Lopez</option>
+        </select><br>
+
+        <label for="call-type">Tipo de Llamada:</label>
+        <select id="call-type" onchange="updateDetails()" required>
+            <option value="" disabled selected>Seleccione el tipo de llamada</option>
+            <option value="Asignacion cita">Asignacion cita</option>
+            <option value="Cancelación o reprogramación de Cita">Cancelación o reprogramación de Cita</option>
+            <option value="Información Cita">Información Cita</option>
+            <option value="Información sedes Atención">Información sedes Atención</option>
+            <option value="Otro tipo de información">Otro tipo de información</option>
+        </select><br>
+
+        <div id="details-container">
+            <!-- Aquí se mostrarán los detalles adicionales según el tipo de llamada -->
+        </div><br>
+
+        <label for="observation">Observación:</label>
+        <textarea id="observation" rows="5" cols="50" maxlength="1000" required></textarea><br>
+
+        <button type="submit">Guardar</button>
+    </form>
 </body>
 </html>
